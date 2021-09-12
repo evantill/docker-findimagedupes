@@ -1,3 +1,4 @@
+#!/bin/bash
 # INSTALL
 # - copy the files deploy.env, config.env, version.sh and Makefile to your repo
 # - replace the vars in deploy.env

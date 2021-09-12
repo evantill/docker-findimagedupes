@@ -1,4 +1,4 @@
-FROM golang:1.13
+FROM golang:1.13 as build
 
 ARG GOOS=linux
 ARG GOARCH=amd64
@@ -6,17 +6,20 @@ ARG GOARCH=amd64
 ENV GOOS=$GOOS
 ENV GOARCH=$GOARCH
 
-WORKDIR /go/src/github.com/v1k0d3n/myapp
-COPY . .
+RUN apt-get -qq update && \
+    apt-get install -y libmagic-dev libpng-dev libjpeg-dev libtiff-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN go get -d -v ./...
+RUN go get -v -u gitlab.com/opennota/findimagedupes
 
-RUN CGO_ENABLED=0 go build -ldflags '-w -s' -a -installsuffix cgo -o /myapp
+FROM debian:10-slim
 
-FROM scratch AS build
-COPY --from=0 /myapp /myapp
+RUN apt-get -qq update && \
+    apt-get install -y libmagic-dev libpng-dev libjpeg-dev libtiff-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-VOLUME /data
+COPY --from=build /go/bin/findimagedupes /usr/local/bin/findimagedupes
 
-ENTRYPOINT [ "/myapp" ]
+ENTRYPOINT [ "/usr/local/bin/findimagedupes" ]
+
 CMD [ "--help" ]
