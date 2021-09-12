@@ -1,0 +1,29 @@
+FROM golang:1.13 as build
+
+ARG GOOS=linux
+ARG GOARCH=amd64
+
+ENV GOOS=$GOOS
+ENV GOARCH=$GOARCH
+
+RUN apt-get -qq update && \
+    apt-get install -y libmagic-dev libpng-dev libjpeg-dev libtiff-dev libzstd-dev libwebp-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN go get -d -v -u gitlab.com/opennota/findimagedupes
+
+WORKDIR /go/src/gitlab.com/opennota/findimagedupes
+
+RUN go build -ldflags '-extldflags "-static -ljpeg -lpng -ltiff -lzstd -lz -lwebp -ljbig -llzma -lpthread"' -tags sqlite_omit_load_extension -o /go/bin/findimagedupes ./...
+
+#FROM debian:10-slim
+
+#RUN apt-get -qq update && \
+#    apt-get install -y libmagic-dev libpng-dev libjpeg-dev libtiff-dev && \
+#    rm -rf /var/lib/apt/lists/*
+
+#COPY --from=build /go/bin/findimagedupes /usr/local/bin/findimagedupes
+
+#ENTRYPOINT [ "/usr/local/bin/findimagedupes" ]
+
+#CMD [ "--help" ]
